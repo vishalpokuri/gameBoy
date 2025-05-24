@@ -3,14 +3,24 @@ import QName from "./subcomponents/QName";
 import QProgress from "./subcomponents/QProgress";
 import QRemainingTime from "./subcomponents/QRemainingTime";
 import QTime from "./subcomponents/QTime";
+import type { Craftables } from "../utils/types";
+import { useHistoryStore, useQueueStore } from "../utils/store";
 
-interface QueueComponentProps {
-  name: string;
+interface QueueItem {
+  item: Craftables;
   startTime: Date;
-  duration: number; // in seconds
 }
 
-function QueueComponent({ name, startTime, duration }: QueueComponentProps) {
+interface QueueComponentProps {
+  comp: QueueItem;
+}
+
+function QueueComponent({ comp }: QueueComponentProps) {
+  const name = comp.item.title;
+  const startTime = comp.startTime;
+  const duration = comp.item.duration;
+  const addCompletedItem = useHistoryStore((state) => state.addCompletedItem);
+  const removeFromQueue = useQueueStore((state) => state.removeFromQueue);
   const [progress, setProgress] = useState(0);
   const [remainingTime, setRemainingTime] = useState(duration);
 
@@ -23,11 +33,18 @@ function QueueComponent({ name, startTime, duration }: QueueComponentProps) {
       const progressPercent = Math.min(100, (elapsedSeconds / duration) * 100);
       const remaining = Math.max(0, duration - elapsedSeconds);
 
+      if (progressPercent >= 100) {
+        addCompletedItem(comp.item);
+        removeFromQueue(comp.item.id); // Remove from queue
+        clearInterval(interval);
+      }
+
       setProgress(parseFloat(progressPercent.toFixed(1)));
       setRemainingTime(remaining);
     }, 1000);
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line
   }, [startTime, duration]);
 
   const endTime = new Date(startTime.getTime() + duration * 1000);
@@ -39,7 +56,7 @@ function QueueComponent({ name, startTime, duration }: QueueComponentProps) {
       .padStart(2, "0")}`;
 
   return (
-    <div className="w-[85%] bg-gradient-to-b from-transparent to-[#121624] rounded-2xl mx-auto mb-2 text-white">
+    <div className="w-[85%] bg-gradient-to-b from-transparent to-[#121624] rounded-2xl mx-auto my-4 text-white">
       <div className="flex mb-2 pt-2">
         <div className="w-1/3 min-h-[60%]">
           <QName name={name} index={1} />

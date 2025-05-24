@@ -4,7 +4,12 @@ import type { Item, Craftables } from "../utils/types";
 import { rectSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { useMemo, useState, useEffect } from "react";
 import { craftableItems } from "../utils/dummyData";
-import { useQueueStore } from "../utils/store";
+import {
+  useActiveTabStore,
+  useInventoryStore,
+  useQueueStore,
+} from "../utils/store";
+import { toast } from "sonner";
 
 interface Props {
   items: Item[];
@@ -12,6 +17,9 @@ interface Props {
 
 function CraftingTable({ items }: Props) {
   const [itemSelected, setItemSelected] = useState<Craftables | null>(null);
+  const { clearCraftingTable } = useInventoryStore();
+  const { setActiveTab } = useActiveTabStore();
+
   const { setQueueItem } = useQueueStore();
   const [step, setStep] = useState<"SELECT" | "CONFIRM">("SELECT");
   const [requirements, setRequirements] = useState<
@@ -22,11 +30,46 @@ function CraftingTable({ items }: Props) {
     }[]
   >([]);
 
-  function handleQueue() {
+  function handleCraftItem() {
     setQueueItem(itemSelected!, new Date());
+    clearCraftingTable();
+    setActiveTab("Queue");
   }
 
-  const { setNodeRef, isOver } = useDroppable({ id: "CRAFT" });
+  // Custom drop validation function
+  const canAcceptItem = (itemName: string): boolean => {
+    if (!itemSelected || step !== "CONFIRM") return true;
+
+    const requirement = itemSelected.requirements.find(
+      (req) => req.item.name === itemName
+    );
+    if (!requirement) return false;
+
+    const currentCount = items.filter((item) => item.name === itemName).length;
+    return currentCount < requirement.quantity;
+  };
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: "CRAFT",
+    data: {
+      accepts: (item: Item) => {
+        const canAccept = canAcceptItem(item.name);
+        if (!canAccept && itemSelected && step === "CONFIRM") {
+          const requirement = itemSelected.requirements.find(
+            (req) => req.item.name === item.name
+          );
+          if (requirement) {
+            toast.error(
+              `You already have enough ${item.name} (${requirement.quantity}/${requirement.quantity})`
+            );
+          } else {
+            toast.error(`${item.name} is not required for this recipe`);
+          }
+        }
+        return canAccept;
+      },
+    },
+  });
 
   const itemsIds = useMemo(
     () => items.map((item) => item.id.toString()),
@@ -66,9 +109,25 @@ function CraftingTable({ items }: Props) {
     (req) => req.fulfilled >= req.quantity
   );
 
+  const handleBackClick = () => {
+    setStep("SELECT");
+    setItemSelected(null);
+
+    const currentItems = useInventoryStore.getState().items;
+    useInventoryStore
+      .getState()
+      .setItems(
+        currentItems.map((item) =>
+          item.currentlyAt === "CRAFT"
+            ? { ...item, currentlyAt: "INVENTORY" }
+            : item
+        )
+      );
+  };
+
   return (
     <>
-      <div className="mt-10">
+      <div className="mt-10 flex justify-between items-center">
         <h1
           className={`my-2 mb-4 ${
             step === "SELECT" ? "text-white" : "text-gray-400"
@@ -83,6 +142,16 @@ function CraftingTable({ items }: Props) {
             {"> Crafting Table"}
           </span>
         </h1>
+
+        {step === "CONFIRM" && (
+          <button
+            onClick={handleBackClick}
+            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md text-sm flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            <ArrowSvg />
+            Back
+          </button>
+        )}
       </div>
 
       <div className="relative max-h-[250px] min-h-[250px] flex flex-col border rounded-xl overflow-hidden">
@@ -162,13 +231,13 @@ function CraftingTable({ items }: Props) {
                   </div>
 
                   <button
-                    className={`w-full mt-2 px-4 py-3 rounded-xl shadow-2xl font-medium transition-all duration-200 ${
+                    className={`w-full mt-2 px-4 py-3 rounded-xl shadow-2xl font-medium transition-all duration-200 cursor-pointer ${
                       allRequirementsFulfilled
                         ? "bg-green-600 text-white hover:bg-green-700 hover:shadow-green-500/25 hover:-translate-y-0.5 transform"
                         : "bg-gray-600 text-gray-300 cursor-not-allowed"
                     }`}
                     disabled={!allRequirementsFulfilled}
-                    onClick={handleQueue}
+                    onClick={handleCraftItem}
                   >
                     {allRequirementsFulfilled
                       ? "Craft Item"
@@ -184,7 +253,7 @@ function CraftingTable({ items }: Props) {
           <div className="p-4 pointer-events-auto animate-slideUp sticky w-full bottom-0">
             <button
               onClick={() => setStep("CONFIRM")}
-              className="w-full bg-green-600 text-white px-4 py-3 rounded-xl shadow-2xl hover:bg-green-700 hover:shadow-green-500/25 hover:-translate-y-0.5 transform transition-all duration-200 font-medium"
+              className="w-full cursor-pointer bg-green-600 text-white px-4 py-3 rounded-xl shadow-2xl hover:bg-green-700 hover:shadow-green-500/25 hover:-translate-y-0.5 transform transition-all duration-200 font-medium"
             >
               Continue
             </button>
@@ -225,5 +294,25 @@ function CraftingItem({
         </div>
       </div>
     </div>
+  );
+}
+
+function ArrowSvg() {
+  return (
+    <>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+      </svg>
+    </>
   );
 }

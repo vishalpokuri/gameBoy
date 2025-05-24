@@ -27,7 +27,8 @@ export const FRONT_PORT_AR: BaseItem = {
   name: "Front Port Assault Rifle",
 };
 
-export const inventoryItems: Item[] = [
+// eslint-disable-next-line prefer-const
+export let inventoryItems: Item[] = [
   { id: "1", ...BARREL_NORMAL, currentlyAt: "INVENTORY" },
   { id: "2", ...BARREL_AR, currentlyAt: "INVENTORY" },
   { id: "3", ...FRONT_PORT_AR, currentlyAt: "INVENTORY" },

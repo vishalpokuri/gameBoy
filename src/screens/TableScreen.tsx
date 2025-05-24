@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   DndContext,
   type DragEndEvent,
@@ -12,11 +12,16 @@ import {
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import Inventory from "../components/Inventory";
 import CraftingTable from "../components/CraftingTable";
-import { inventoryItems as initialItems } from "../utils/dummyData";
+import { useInventoryStore } from "../utils/store";
 import type { Item } from "../utils/types";
 
 function TableScreen() {
-  const [items, setItems] = useState<Item[]>(initialItems);
+  const { items, moveItem } = useInventoryStore();
+
+  useEffect(() => {
+    console.log(items);
+  }, [items]);
+
   const [activeItem, setActiveItem] = useState<Item | null>(null);
   const [draggedItemOriginalZone, setDraggedItemOriginalZone] = useState<
     Item["currentlyAt"] | null
@@ -52,17 +57,23 @@ function TableScreen() {
 
     const newZone = over.id as string;
     if (newZone !== "INVENTORY" && newZone !== "CRAFT") {
-      //return to originalZone
+      // return to originalZone
       return;
     }
+
     if (newZone !== originalZone) {
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id.toString() === draggedId
-            ? { ...item, currentlyAt: newZone }
-            : item
-        )
+      const draggedItem = items.find(
+        (item) => item.id.toString() === draggedId
       );
+
+      if (draggedItem && over.data?.current?.accepts) {
+        const canAccept = over.data.current.accepts(draggedItem);
+
+        if (!canAccept) {
+          return;
+        }
+      }
+      moveItem(draggedId.toString(), newZone);
     }
   };
 
@@ -84,7 +95,9 @@ function TableScreen() {
         <h1 className="my-2 mb-2">Inventory</h1>
         <Inventory items={items.filter((i) => i.currentlyAt === "INVENTORY")} />
 
-        <CraftingTable items={items.filter((i) => i.currentlyAt === "CRAFT")} />
+        <CraftingTable
+          items={items.filter((i: Item) => i.currentlyAt === "CRAFT")}
+        />
       </div>
 
       {/* Drag preview */}
