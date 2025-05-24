@@ -7,18 +7,21 @@ interface Props {
 }
 
 function CraftingTable({ items }: Props) {
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: "CRAFT",
   });
 
   return (
     <div
       ref={setNodeRef}
-      className="h-3/5 overflow-y-auto border border-green-400 rounded-lg"
+      className={`max-h-[250px] min-h-[250px] overflow-y-auto border rounded-lg transition-colors ${
+        isOver ? "border-green-400 bg-green-400/10" : "border-green-400"
+      }`}
     >
-      <div className="grid grid-cols-3 gap-2 p-2">
+      <div className="grid grid-cols-3 gap-2 p-2 min-h-full">
         {items.map((item) => (
           <InventoryItem
+            key={item.id}
             id={item.id}
             imageUrl={item.imageUrl}
             name={item.name}

@@ -1,20 +1,32 @@
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Props {
   name: string;
   imageUrl: string;
-  id: string | number; // Pass item.id from parent
+  id: string | number;
 }
 
 function InventoryItem({ name, imageUrl, id }: Props) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: id.toString(),
+    data: {
+      type: "Item",
+      name,
+      imageUrl,
+    },
   });
 
   const style = {
-    transform: transform
-      ? `translate(${transform.x}px, ${transform.y}px)`
-      : undefined,
+    transition,
+    transform: CSS.Transform.toString(transform),
   };
 
   return (
@@ -23,7 +35,9 @@ function InventoryItem({ name, imageUrl, id }: Props) {
       {...listeners}
       {...attributes}
       style={style}
-      className="aspect-square bg-gradient-to-b from-[#fff]/40 to-[#fff]/0 rounded-lg flex flex-col items-center justify-center p-2"
+      className={`aspect-square bg-gradient-to-b from-[#fff]/40 to-[#fff]/0 rounded-lg flex flex-col items-center justify-center p-2 cursor-grab active:cursor-grabbing transition-opacity ${
+        isDragging ? "opacity-50" : "opacity-100"
+      }`}
     >
       <h1 className="text-xs text-center">{name}</h1>
       <img src={imageUrl} alt={name} className="w-3/4 h-3/4 object-contain" />
