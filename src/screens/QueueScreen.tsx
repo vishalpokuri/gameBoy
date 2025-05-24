@@ -1,40 +1,17 @@
 import QueueComponent from "../components/QueueComponent";
+import { useQueueStore } from "../utils/store";
 
 function QueueScreen() {
+  const { queueItems } = useQueueStore();
   return (
     <>
-      <QueueComponent
-        name="Repair Kit"
-        index={1}
-        startTime="9:07 AM"
-        endTime="9:17AM"
-        progress={75}
-        remainingTime={9}
-      />
-      <QueueComponent
-        name="Repair Kit"
-        index={1}
-        startTime="9:07 AM"
-        endTime="9:17AM"
-        progress={75}
-        remainingTime={9}
-      />
-      <QueueComponent
-        name="Repair Kit"
-        index={1}
-        startTime="9:07 AM"
-        endTime="9:17AM"
-        progress={75}
-        remainingTime={9}
-      />
-      <QueueComponent
-        name="Repair Kit"
-        index={1}
-        startTime="9:07 AM"
-        endTime="9:17AM"
-        progress={75}
-        remainingTime={9}
-      />{" "}
+      {queueItems.map((comp) => (
+        <QueueComponent
+          name={comp.item.title}
+          startTime={comp.startTime}
+          duration={comp.item.duration}
+        />
+      ))}
     </>
   );
 }

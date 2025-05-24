@@ -26,7 +26,7 @@ function TableScreen() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Require 8px movement before drag starts
+        distance: 8,
       },
     })
   );

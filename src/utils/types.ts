@@ -17,6 +17,7 @@ interface Craftables {
   id: string;
   title: string;
   imageUrl: string;
+  duration: number;
   requirements: {
     item: BaseItem;
     quantity: number;
