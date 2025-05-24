@@ -12,7 +12,7 @@ import {
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import Inventory from "../components/Inventory";
 import CraftingTable from "../components/CraftingTable";
-import { items as initialItems } from "../utils/dummyData";
+import { inventoryItems as initialItems } from "../utils/dummyData";
 import type { Item } from "../utils/types";
 
 function TableScreen() {
@@ -84,15 +84,19 @@ function TableScreen() {
         <h1 className="my-2 mb-2">Inventory</h1>
         <Inventory items={items.filter((i) => i.currentlyAt === "INVENTORY")} />
 
-        <h1 className="my-2 mb-2">Crafting Table</h1>
         <CraftingTable items={items.filter((i) => i.currentlyAt === "CRAFT")} />
       </div>
 
       {/* Drag preview */}
       <DragOverlay modifiers={[restrictToWindowEdges]}>
         {activeItem ? (
-          <div className="aspect-square bg-gradient-to-b from-[#fff]/60 to-[#fff]/20 rounded-lg flex flex-col items-center justify-center p-2 border-2 border-blue-400 shadow-lg opacity-90">
-            <h1 className="text-xs text-center font-semibold">
+          <div className="aspect-square bg-gradient-to-b from-[#fff]/60 to-[#fff]/20 rounded-lg flex flex-col items-center justify-center px-1 border-2 border-blue-400 shadow-lg opacity-90">
+            <h1
+              className=" text-gray-300 text-center font-semibold truncate w-full"
+              style={{
+                fontSize: "11px",
+              }}
+            >
               {activeItem.name}
             </h1>
             <img

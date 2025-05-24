@@ -21,8 +21,8 @@ function Inventory({ items }: Props) {
   return (
     <div
       ref={setNodeRef}
-      className={`max-h-[250px] min-h-[250px] overflow-y-auto border rounded-lg  transition-colors ${
-        isOver ? "border-blue-400 bg-blue-400/10" : "border-gray-400"
+      className={`max-h-[250px] min-h-[250px] overflow-y-auto border rounded-xl  transition-colors ${
+        isOver ? "border-blue-400/20 bg-blue-400/10" : "border-gray-400/50"
       }`}
     >
       <div className="grid grid-cols-3 gap-2 p-2 min-h-full">
